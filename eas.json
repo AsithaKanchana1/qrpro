@@ -4,6 +4,15 @@
       "developmentClient": true,
       "distribution": "internal"
     },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
     "production": {
       "android": {
         "buildType": "apk"
@@ -11,11 +20,6 @@
       "ios": {
         "buildConfiguration": "Release"
       }
-    }
-  },
-  "extra": {
-    "eas": {
-      "projectId": "075bc37d-e1d7-46ad-b04e-313a893780ec"
     }
   }
 }

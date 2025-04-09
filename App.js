@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, ScrollView, Linking } from 'react-native';
 import { TextInput, Button, Text, Card } from 'react-native-paper';
 import QRCode from 'react-native-qrcode-svg';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system'; // Handles file saving
 import validator from 'validator';
+import { SocialIcon } from '@rneui/themed'; // Import SocialIcon
 
 export default function App() {
   const [inputText, setInputText] = useState('');
@@ -17,18 +18,17 @@ export default function App() {
       return;
     }
 
-    // Validate input (check if it's a valid URL or meaningful text)
     if (!validator.isURL(inputText) && inputText.includes(' ')) {
       Alert.alert('Error', 'Please enter a valid URL or meaningful text.');
       return;
     }
 
-    setShowQRCode(true); // Show the QR Code after validation
+    setShowQRCode(true);
   };
 
   const clearInput = () => {
-    setInputText(''); // Clear the input field
-    setShowQRCode(false); // Hide the QR Code when clearing the input
+    setInputText('');
+    setShowQRCode(false);
   };
 
   const saveQRCodeToGallery = async () => {
@@ -38,23 +38,19 @@ export default function App() {
     }
 
     try {
-      // Request media library permissions
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Error', 'Permission to access media library is required.');
         return;
       }
 
-      // Get QR code as Base64 string using `toDataURL` method
       qrCodeRef.current.toDataURL(async (data) => {
-        const fileUri = `${FileSystem.cacheDirectory}qrcode.png`; // Define file path in cache directory
+        const fileUri = `${FileSystem.cacheDirectory}qrcode.png`;
 
-        // Save Base64 image as a file
         await FileSystem.writeAsStringAsync(fileUri, data, {
           encoding: FileSystem.EncodingType.Base64,
         });
 
-        // Save the file to the gallery
         const asset = await MediaLibrary.createAssetAsync(fileUri);
         await MediaLibrary.createAlbumAsync('QR Codes', asset, false);
 
@@ -66,13 +62,26 @@ export default function App() {
     }
   };
 
+  // Function to open external links
+  const openLink = async (url) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url); // Open the URL in the browser
+      } else {
+        Alert.alert('Error', `Can't open this URL: ${url}`);
+      }
+    } catch (error) {
+      console.error('Error opening URL:', error);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text variant="headlineLarge" style={styles.title}>
         QR Code Generator
       </Text>
 
-      {/* Input field for text or URL */}
       <TextInput
         mode="outlined"
         label="Enter text or URL"
@@ -81,18 +90,15 @@ export default function App() {
         style={styles.input}
       />
 
-      {/* Generate QR Code Button */}
       <Button mode="contained" onPress={generateQRCode} style={styles.button}>
         Generate QR Code
       </Button>
 
-      {/* Clear Input Button */}
       <Button mode="outlined" onPress={clearInput} style={styles.clearButton}>
         Clear Input
       </Button>
 
-      {/* Display generated QR Code */}
-      {showQRCode && inputText.trim() && ( // Only render QRCode if input is valid and not empty
+      {showQRCode && inputText.trim() && (
         <Card style={styles.qrContainer}>
           <QRCode value={inputText} size={200} getRef={(c) => (qrCodeRef.current = c)} />
           <Button mode="contained" onPress={saveQRCodeToGallery} style={styles.saveButton}>
@@ -101,13 +107,30 @@ export default function App() {
           <Text>QR Code Generated Successfully!</Text>
         </Card>
       )}
-    </View>
+
+      {/* Social Media Icons */}
+      <View style={styles.socialIconsContainer}>
+        {/* GitHub Icon */}
+        <SocialIcon
+          type="github"
+          onPress={() => openLink('https://github.com/Asithakanchana1')} // My Github Account
+        />
+        
+        {/* LinkedIn Icon */}
+        <SocialIcon
+          type="linkedin"
+          onPress={() => openLink('https://linkedin.com/in/asithakanchana')} // My Linkdn Account
+        />
+        
+        {/* Add more icons if needed */}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -133,5 +156,11 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 10,
+  },
+  socialIconsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 30,
   },
 });
